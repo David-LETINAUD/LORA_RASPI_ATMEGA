@@ -11,6 +11,8 @@ import MySQLdb as mysql# Database
 
 # https://www.quennec.fr/trucs-astuces/langages/python/python-utiliser-un-fichier-de-param%C3%A8tres
 
+MY_SERVER_ADDRESS="0"
+
 config = configparser.RawConfigParser() # On créé un nouvel objet "config"
 config.read('config.cfg') # On lit le fichier de paramètres
 
@@ -24,13 +26,17 @@ parity = config.get('SERIAL','parity')
 stopbits = config.get('SERIAL','stopbits')
 
 # Récupération CONFIG DATABASE
-paramMysql = {
-    'host'   : config.get('MYSQL','host'),
-    'user'   : config.get('MYSQL','user'),
-    'passwd' : config.get('MYSQL','passwd'),
-    'db'     : config.get('MYSQL','db')
+param_db = {
+    'host'   : config.get('DATABASE','host'),
+    'user'   : config.get('DATABASE','user'),
+    'passwd' : config.get('DATABASE','passwd'),
+    'db'     : config.get('DATABASE','db')
 }
-db = mysql.connect(**paramMysql)        # name of the data base
+temp_table = config.get('DATABASE','temp_table')
+temp_query = "INSERT INTO {} (capteur, temp, hum, tension) VALUES(%s, %s, %s, %s)".format(temp_table)
+
+db = mysql.connect(**param_db)        # name of the data base
+
 # you must create a Cursor object. It will let
 #  you execute all the queries you need
 cur = db.cursor()
@@ -47,6 +53,10 @@ def fermer_prog(signal,frame):
 
 signal.signal(signal.SIGINT, fermer_prog)
 
+def insert_db(query,values):
+ cur.execute(query,values)
+ db.commit()
+ #print(cur.rowcount, "record inserted")
 
 def Temp(msg):
  tab = msg.split()
@@ -56,19 +66,17 @@ def Temp(msg):
  vbat = float(tab[3])
  values = ( capteur, temp, hum, vbat)
  print("capteur : {} temp : {} hum : {} vbat : {}".format(capteur, temp, hum, vbat))
- # Commande SQL
- query = "INSERT INTO Date_Temp_hum_tension (capteur, temp, hum, tension) VALUES(%s, %s, %s, %s)"
- cur.execute(query,values)
- db.commit()
- #print(cur.rowcount, "record inserted")
+ # Commande SQL 
+ insert_db(temp_query,values)
  
 def Analyse_Trames(m):
- #Pour capteur température "TH"
- if m[:2]=="TH":
-   Temp(m[2:])
- # Pour autres capteurs
- # ...
- else :
+ if m[0]==MY_SERVER_ADDRESS:
+  #Pour capteur température "TH"
+  if m[1:3]=="TH":
+   Temp(m[3:])
+  # Pour autres capteurs
+  # ...
+  else :
    print(m)
 
 
