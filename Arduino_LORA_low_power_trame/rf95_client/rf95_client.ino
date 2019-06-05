@@ -15,10 +15,13 @@
 #include <LowPower.h>
 
 #define MY_ADDRESS 1
-#define Server_ADDRESS 254
+#define Server_ADDRESS 0
 #define SENSOR_TYPE "TH"
 #define V_REF 1.1
 #define R_div 4 //pont diviseur de tension
+#define NB_NOT_ACK 3 // Trame peut être renvoyée 3 fois jusqu'à ce que l'ack soit recu
+
+uint8_t cpt_not_ack = 0 ;
 // Singleton instance of the radio driver
 RH_RF95 rf95;
 //RH_RF95 rf95(5, 2); // Rocket Scream Mini Ultra Pro with the RFM95W
@@ -31,12 +34,19 @@ uint8_t trame[50] = {0};
 uint8_t cpt = 0 ;
 uint8_t it,ft,ih,fh,iv,fv ;
 
+uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
+uint8_t len = sizeof(buf);
+
+char ack = 0 ;
+
 void acquisition(uint8_t *it,uint8_t *ft, uint8_t *ih,uint8_t * fh,uint8_t * iv,uint8_t * fv);
 void split_float(float *v, uint8_t *i,uint8_t *f);
 
 float mesure_batterie();
 float mesure_temperature();
 float mesure_humiditee();
+
+char ack_type();
 
 void setup() 
 {
@@ -76,19 +86,66 @@ void loop()
   sprintf(trame, "%s%dT%d.%dH%d.%dV%d.%d",SENSOR_TYPE,MY_ADDRESS,it,ft,ih,fh,iv,fv);
   ++it ;*/
   acquisition(&it,&ft,&ih,&fh,&iv,&fv);
-  sprintf(trame, "%s%d %d.%d %d.%d %d.%d",SENSOR_TYPE,MY_ADDRESS,it,ft,ih,fh,iv,fv);
+  sprintf(trame, "%d%s%d %d.%d %d.%d %d.%d",Server_ADDRESS,SENSOR_TYPE,MY_ADDRESS,it,ft,ih,fh,iv,fv);
 
- 
+  ack=0;
   rf95.send(trame, sizeof(trame));
   rf95.waitPacketSent();
- 
-  rf95.sleep();  
-  //delay(4000);
-  //Watchdog.sleep(4000); //PAS TOP
-  LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //un peu mieux que watchdog mais plus de serial
-  //LowPower.idle(SLEEP_4S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF,SPI_OFF, USART0_OFF, TWI_OFF); // moins bien que powerdown
 
+  if (rf95.waitAvailableTimeout(1250)) // emetteur<-->recepteur à 1 mètre timeout minimum de 550ms
+                                        // A la reception d'une trame renvoie 1 et attend x ms et renvoie 0 si rien est recu avant la fin des x ms
+  { 
+    // Should be a reply message for us now   
+    if (rf95.recv(buf, &len))
+   {
+     // Serial.print("got reply: ");
+     // Serial.println((char*)buf);
+
+      //Serial.print("ack_type");
+      ack = ack_type();
+      //Serial.println((char)ack);
+
+      memset(buf, '\0', strlen(buf) - 1);       
+    }
+    else
+    {
+      Serial.println("recv failed");
+    }
+  }
+  else
+  {
+    Serial.println("No reply, is rf95_server running?");
+  }
+
+  if (ack=='A' or cpt_not_ack >= NB_NOT_ACK-1)
+  {
+    rf95.sleep();  
+    delay(4000);
+    //Watchdog.sleep(4000); //PAS TOP
+    //LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //un peu mieux que watchdog mais plus de serial
+    //LowPower.idle(SLEEP_4S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF,SPI_OFF, USART0_OFF, TWI_OFF); // moins bien que powerdown
+    cpt_not_ack = 0;
+  }
+  else
+  {
+    Serial.print("NOT_ack : ");
+    Serial.println(cpt_not_ack);
+   ++cpt_not_ack;
+  }
 }
+char ack_type()
+{
+  char temp ;
+  //itoa(MY_ADDRESS,&temp ,10)
+  //atoi(buf,&temp ,10);
+  //Serial.println(atoi(&buf[0]));
+  if ( (atoi(&buf[0])==MY_ADDRESS) and (atoi(&buf[3])==(char)Server_ADDRESS) and (buf[1]==(char)SENSOR_TYPE[0])and (buf[2]==(char)SENSOR_TYPE[1]) )
+  {
+    return buf[5];
+  }
+  return -1 ;  
+}
+
 void acquisition(uint8_t *it,uint8_t *ft, uint8_t *ih,uint8_t * fh,uint8_t * iv,uint8_t * fv)
 {
   // Mesure température
@@ -101,7 +158,6 @@ void acquisition(uint8_t *it,uint8_t *ft, uint8_t *ih,uint8_t * fh,uint8_t * iv,
 
   // Mesure tension
   float tension=mesure_batterie();
-  if (tension>10.00) tension = 10.00 ;   // Erreur tension
   split_float(&tension,iv,fv);
 }
 void split_float(float *v, uint8_t *i,uint8_t *f)
