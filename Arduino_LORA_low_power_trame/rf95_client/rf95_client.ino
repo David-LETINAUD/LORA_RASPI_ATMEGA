@@ -47,6 +47,7 @@ float mesure_temperature();
 float mesure_humiditee();
 
 char ack_type();
+bool trame_err = false ;
 
 void setup() 
 {
@@ -76,19 +77,14 @@ void setup()
 
 void loop()
 {
-  //Serial.println("Demande d acquistion");
-  // 1er envoie
-
-//iv=3 ; fv=33;
-  // A mettre avant le send!!!!
-  /*ft=5; ih=50; fh=5; iv=3 ; fv=3;
-  //sprintf(trame,"{\"t\":\"%d.%d\",\"h\":\"%d.%d\"}",it,ft,ih,fh);
-  sprintf(trame, "%s%dT%d.%dH%d.%dV%d.%d",SENSOR_TYPE,MY_ADDRESS,it,ft,ih,fh,iv,fv);
-  ++it ;*/
-  acquisition(&it,&ft,&ih,&fh,&iv,&fv);
-  sprintf(trame, "%d%s%d %d.%d %d.%d %d.%d",Server_ADDRESS,SENSOR_TYPE,MY_ADDRESS,it,ft,ih,fh,iv,fv);
-
-  ack=0;
+  ack='0';
+  if (trame_err == true or cpt_not_ack==0 )
+  {
+    acquisition(&it,&ft,&ih,&fh,&iv,&fv);
+    sprintf(trame, "%d%s%d %d.%d %d.%d %d.%d",Server_ADDRESS,SENSOR_TYPE,MY_ADDRESS,it,ft,ih,fh,iv,fv);
+    trame_err = false ;
+  }
+  
   rf95.send(trame, sizeof(trame));
   rf95.waitPacketSent();
 
@@ -117,20 +113,26 @@ void loop()
     Serial.println("No reply, is rf95_server running?");
   }
 
+  rf95.sleep();
   if (ack=='A' or cpt_not_ack >= NB_NOT_ACK-1)
-  {
-    rf95.sleep();  
+  { 
     delay(4000);
     //Watchdog.sleep(4000); //PAS TOP
     //LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //un peu mieux que watchdog mais plus de serial
     //LowPower.idle(SLEEP_4S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF,SPI_OFF, USART0_OFF, TWI_OFF); // moins bien que powerdown
     cpt_not_ack = 0;
   }
+  else if (ack=='E')
+  {
+    trame_err = true ;
+    Serial.println("Trame err : refaire acquisition");
+  }
   else
   {
+    // renvoie de la trame
     Serial.print("NOT_ack : ");
     Serial.println(cpt_not_ack);
-   ++cpt_not_ack;
+    ++cpt_not_ack;
   }
 }
 char ack_type()
