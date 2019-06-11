@@ -61,15 +61,16 @@ void setup()
 //  digitalWrite(4, HIGH);
 
   if (!htu.begin()) {
-    Serial.println("Couldn't find sensor!");
+    //Serial.println("Couldn't find sensor!");
     while (1);
   }
 
   analogReference(INTERNAL); // Utiliser V_ref=1.1V pour l'ADC
-  Serial.begin(9600);
-  while (!Serial) ; // Wait for serial port to be available
+  //Serial.begin(9600);
+  //while (!Serial) ; // Wait for serial port to be available
   if (!rf95.init())
-    Serial.println("init failed");  
+  ;   // Serial.println("init failed");
+    
   rf95.setFrequency(868);
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
 
@@ -114,33 +115,33 @@ void loop()
     }
     else
     {
-      Serial.println("recv failed");
+      //Serial.println("recv failed");
     }
   }
   else
   {
-    Serial.println("No reply, is rf95_server running?");
+    //Serial.println("No reply, is rf95_server running?");
   }
 
   rf95.sleep();
   if (ack=='A' or cpt_not_ack >= NB_NOT_ACK-1)
   { 
-    delay(4000);
+    //delay(4000);
     //Watchdog.sleep(4000); //PAS TOP
-    //LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //un peu mieux que watchdog mais plus de serial
+    LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //un peu mieux que watchdog mais plus de serial
     //LowPower.idle(SLEEP_4S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF,SPI_OFF, USART0_OFF, TWI_OFF); // moins bien que powerdown
     cpt_not_ack = 0;
   }
   else if (ack=='E')
   {
     trame_err = true ;
-    Serial.println("Trame err : refaire acquisition");
+    //Serial.println("Trame err : refaire acquisition");
   }
   else
   {
     // renvoie de la trame
-    Serial.print("NOT_ack : ");
-    Serial.println(cpt_not_ack);
+    //Serial.print("NOT_ack : ");
+    //Serial.println(cpt_not_ack);
     ++cpt_not_ack;
   }
 }
