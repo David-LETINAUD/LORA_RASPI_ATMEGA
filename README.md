@@ -15,3 +15,11 @@ Programme python pour réception des données et sauvegarde dans une base de don
 Fichier de config des paramètres de communication série et de la base de donnée.
 ### serial_rx_tx.py
 Classe SerialPort pour la gestion de la communication série.
+
+
+## Schémas
+### Schéma de principe
+![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/Schema_materiel.PNG)
+
+### Connexion arduino <-> Lora
+![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/LoRa-com-Arduino-UNO.jpg)
