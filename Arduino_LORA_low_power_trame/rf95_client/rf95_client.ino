@@ -13,6 +13,8 @@
 #include <RH_RF95.h>
 #include <string.h>
 #include <LowPower.h>
+#include <Wire.h>
+#include <Adafruit_HTU21DF.h>
 
 #define MY_ADDRESS 1
 #define Server_ADDRESS 0
@@ -49,12 +51,19 @@ float mesure_humiditee();
 char ack_type();
 bool trame_err = false ;
 
+Adafruit_HTU21DF htu = Adafruit_HTU21DF();
+
 void setup() 
 {
   // Rocket Scream Mini Ultra Pro with the RFM95W only:
   // Ensure serial flash is not interfering with radio communication on SPI bus
 //  pinMode(4, OUTPUT);
 //  digitalWrite(4, HIGH);
+
+  if (!htu.begin()) {
+    Serial.println("Couldn't find sensor!");
+    while (1);
+  }
 
   analogReference(INTERNAL); // Utiliser V_ref=1.1V pour l'ADC
   Serial.begin(9600);
@@ -137,10 +146,6 @@ void loop()
 }
 char ack_type()
 {
-  char temp ;
-  //itoa(MY_ADDRESS,&temp ,10)
-  //atoi(buf,&temp ,10);
-  //Serial.println(atoi(&buf[0]));
   if ( (atoi(&buf[0])==MY_ADDRESS) and (atoi(&buf[3])==(char)Server_ADDRESS) and (buf[1]==(char)SENSOR_TYPE[0])and (buf[2]==(char)SENSOR_TYPE[1]) )
   {
     return buf[5];
@@ -177,9 +182,9 @@ float mesure_batterie()
 }
 float mesure_temperature()
 {
-  return 22.53 ;
+  return htu.readTemperature();
 }
 float mesure_humiditee()
 {
-  return 52.50 ;
+  return htu.readHumidity();
 }
