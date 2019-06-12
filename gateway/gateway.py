@@ -8,6 +8,19 @@ import time
 import configparser # Permet de parser le fichier de parametres
 import serial_rx_tx # Serial port
 import MySQLdb as mysql# Database
+#from scipy.constants.constants import C2F
+import heat_index as HI
+
+from collections import namedtuple
+Capt_pos = namedtuple("Capt_pos", "latitude longitude")
+ 
+IT_capt = Capt_pos(45.965039,2.195339)
+Exp_capt = Capt_pos(45.964338,2.196025)
+capteurs = {1:IT_capt, 2:Exp_capt}
+
+print(HI.heat_index(20,55))
+
+#print(capteurs[1].longitude)
 
 # https://www.quennec.fr/trucs-astuces/langages/python/python-utiliser-un-fichier-de-param%C3%A8tres
 
@@ -35,6 +48,8 @@ param_db = {
 }
 temp_table = config.get('DATABASE','temp_table')
 temp_query = "INSERT INTO {} (capteur, temp, hum, tension) VALUES(%s, %s, %s, %s)".format(temp_table)
+
+temp_map_query = "INSERT INTO {} (capteur, temp, hum, tension,T_ressentie,latitude, longitude ) VALUES(%s, %s, %s, %s, %s, %s, %s)".format(temp_table)
 
 db = mysql.connect(**param_db)        # name of the data base
 
@@ -84,15 +99,42 @@ def Temp(msg):
  return 0
  
  
+def Temp_map(msg):
+ tab = msg.split()
+ capteur = int(tab[0])
+ temp = float(tab[1])
+ hum = float(tab[2])
+ vbat = float(tab[3])
+
+ ressentie = HI.heat_index(temp, hum)
+ 
+ values = ( capteur, temp, hum, vbat,ressentie,capteurs[capteur].latitude,capteurs[capteur].longitude)
+ print("capteur : {} temp : {} hum : {} vbat : {} HI : {} lat : {} long : {}".format(capteur, temp, hum, vbat,ressentie,capteurs[capteur].latitude,capteurs[capteur].longitude ))
+
+ # Si valeur improbable : trame corrompu rendre code erreur
+ if capteur < 0 or capteur > 255:
+  return 1
+ elif vbat < 0 or vbat > 10:
+  return 2
+ elif hum < 0 or hum > 100:
+  return 3
+ elif temp < -50 or vbat > 99:
+  return 4
+
+ # Commande SQL
+ insert_db(temp_map_query,values)
+ # Pas d'erreur
+ return 0
+ 
 def Analyse_Trames(m):
  r = -1
  capteur_type = m[1:3]
  addr_capt = m[3]
  if m[0]==str(MY_SERVER_ADDRESS):
-  print("Server addr")   
   #Pour capteur température "TH"
   if capteur_type=="TH":
-   r = Temp(m[3:])   
+   #r = Temp(m[3:])  
+   r = Temp_map(m[3:])   
   # Pour autres capteurs
   # ...
   
@@ -100,12 +142,10 @@ def Analyse_Trames(m):
    print(m)
    
  elif r == 0:
-  print("OK")
   #Envoie d'un acquittement si recu et pas d'erreurs
   serialPort.Send("{}{}{} A".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
  elif r!=1:
-  #Si erreurs : demande de renvoie
-  print("erreur")
+  #Si erreur : demande de renvoie
   serialPort.Send("{}{}{} E".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
  
 
