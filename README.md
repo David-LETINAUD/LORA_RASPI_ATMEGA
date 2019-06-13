@@ -15,7 +15,12 @@ Programme python pour réception des données et sauvegarde dans une base de don
 Fichier de config des paramètres de communication série et de la base de donnée.
 ### serial_rx_tx.py
 Classe SerialPort pour la gestion de la communication série.
-
+### heat_index.py
+Calcul de la témpérature ressentie.
+### config.py
+Récupération des paramètres de config.cfg.
+### capteurs.py
+Gestion des capteurs et extractions des infos et enregitrement dans base de données. 
 
 ## Schémas
 ### Schéma de principe
