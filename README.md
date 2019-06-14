@@ -1,7 +1,7 @@
 # LORA_RASPI_ATMEGA
 ## Installation
-sudo apt-get install python3
-sudo apt-get install python-configparser
+sudo apt-get install python3  
+sudo apt-get install python-configparser  
 sudo apt-get install python3-mysqldb
 
 ## Arduino_LORA_low_power_trame
