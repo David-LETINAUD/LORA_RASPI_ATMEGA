@@ -7,7 +7,9 @@ sudo apt-get install python3-mysqldb
 
 ### Installation serveur mysql et phpmyadmin
 https://raspbian-france.fr/installer-serveur-web-raspberry-lamp/
-
+Accès à distance à la base de donnée  
+Dans : /etc/mysql/mariadb.conf.d/50-server.cnf  
+Modifier : bind-address 127.0.0.1 en bind-address 0.0.0.0  
 ## Arduino_LORA_low_power_trame
 ### rf95_client.ino
 Programme d'acquisition de mesures et envoie par communication Lora. A installer sur les modules capteurs.
