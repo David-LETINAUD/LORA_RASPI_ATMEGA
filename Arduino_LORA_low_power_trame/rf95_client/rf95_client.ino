@@ -16,6 +16,8 @@
 #include <Wire.h>
 #include <Adafruit_HTU21DF.h>
 
+
+#define TPl5110_DONE A3
 #define MY_ADDRESS 1
 #define Server_ADDRESS 0
 #define SENSOR_TYPE "TH"
@@ -59,6 +61,8 @@ void setup()
   // Ensure serial flash is not interfering with radio communication on SPI bus
 //  pinMode(4, OUTPUT);
 //  digitalWrite(4, HIGH);
+ pinMode(TPl5110_DONE, OUTPUT);
+ digitalWrite(TPl5110_DONE, LOW);
 
   if (!htu.begin()) {
     //Serial.println("Couldn't find sensor!");
@@ -126,9 +130,10 @@ void loop()
   rf95.sleep();
   if (ack=='A' or cpt_not_ack >= NB_NOT_ACK-1)
   { 
+     digitalWrite(TPl5110_DONE, HIGH);
     //delay(4000);
     //Watchdog.sleep(4000); //PAS TOP
-    LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //un peu mieux que watchdog mais plus de serial
+    //LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //un peu mieux que watchdog mais plus de serial
     //LowPower.idle(SLEEP_4S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF,SPI_OFF, USART0_OFF, TWI_OFF); // moins bien que powerdown
     cpt_not_ack = 0;
   }
