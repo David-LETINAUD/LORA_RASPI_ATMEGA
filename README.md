@@ -3,7 +3,7 @@
 ### Environnement python
 sudo apt-get install python  
 sudo apt-get install python-configparser  
-sudo apt-get install python-mysqldb
+sudo apt-get install python-mysqldb  
 sudo apt-get install python-pymssql
 
 
