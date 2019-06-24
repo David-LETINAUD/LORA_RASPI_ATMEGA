@@ -1,9 +1,11 @@
 # LORA_RASPI_ATMEGA
 ## Installation
 ### Environnement python
-sudo apt-get install python3  
+sudo apt-get install python  
 sudo apt-get install python-configparser  
-sudo apt-get install python3-mysqldb
+sudo apt-get install python-mysqldb
+sudo apt-get install python-pymssql
+
 
 ### Installation serveur mysql et phpmyadmin
 https://raspbian-france.fr/installer-serveur-web-raspberry-lamp/
