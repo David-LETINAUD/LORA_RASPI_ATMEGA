@@ -21,17 +21,18 @@ def fermer_prog(signal,frame):
 
 signal.signal(signal.SIGINT, fermer_prog)
 
-# ex de trame température : 0TH1 21.59 51.18 3.53
-# 0 : @Server | "TH" : TYPE de capteur (Temp Hum) | 1 : @capteur | 21.59 : Température | 51.18 : Humidité | 3.53 : Tension batterie
+# ex de trame temperature : 0TH1 21.59 51.18 3.53
+# 0 : @Server | "TH" : TYPE de capteur (Temp Hum) | 1 : @capteur | 21.59 : Temperature | 51.18 : Humidite | 3.53 : Tension batterie
 def Analyse_Trames(m):
  r = -1
  capteur_type = m[1:3]
  addr_capt = m[3]
  if m[0]==str(MY_SERVER_ADDRESS):
-  #Pour capteur température "TH"
+  #Pour capteur temperature "TH"
   if capteur_type=="TH":
    #r = Temp(m[3:])  
-   r = Temp_map(m[3:])   
+   #r = Temp_map(m[3:]) 
+   r= Temp_mssql(m[3:])  
   # Pour autres capteurs
   #if capteur_type=="PR":
   # ...
@@ -40,23 +41,23 @@ def Analyse_Trames(m):
    print(m)
    
  elif r == 0:
-  #Envoie d'un acquittement si recu et pas d'erreurs
+  #Envoie d'un acquittement si recu et pas d erreurs
   serialPort.Send("{}{}{} A".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
  elif r!=1:
   #Si erreur : demande de renvoie
   serialPort.Send("{}{}{} E".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
  
 
-# A la réception d'une trame
+# A la réception d une trame
 def OnReceiveSerialData(message):
  str_message = message.decode("utf-8")
  #print(str_message) # Affiche la trame reçue
  Analyse_Trames(str_message)
 
 
-# Port série
+# Port serie
 serialPort = serial_rx_tx.SerialPort()
-# Ouverture du port de communication série avec l'arduino
+# Ouverture du port de communication serie avec l arduino
 serialPort.Open(port,baudrate,bytesize,parity,stopbits)
 # Register the callback above with the serial port object
 serialPort.RegisterReceiveCallback(OnReceiveSerialData)

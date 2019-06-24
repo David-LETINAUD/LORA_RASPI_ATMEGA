@@ -6,7 +6,8 @@
 #
 import serial
 import sys
-import _thread
+import thread as _thread
+import threading
 
 class SerialPort:
     def __init__(self):
