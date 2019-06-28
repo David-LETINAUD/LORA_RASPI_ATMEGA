@@ -24,6 +24,7 @@
 #define V_REF 1.1
 #define R_div 4 //pont diviseur de tension
 #define NB_NOT_ACK 3 // Trame peut être renvoyée 3 fois jusqu'à ce que l'ack soit recu
+#define ADC_CORRECTION 30
 
 uint8_t cpt_not_ack = 0 ;
 // Singleton instance of the radio driver
@@ -69,7 +70,8 @@ void setup()
     while (1);
   }
 
-  analogReference(INTERNAL); // Utiliser V_ref=1.1V pour l'ADC
+  // ADC resolution => 10bits (2^10 - 1=1023)
+  analogReference(INTERNAL); // Utiliser A_ref=1.1V pour l'ADC
   //Serial.begin(9600);
   //while (!Serial) ; // Wait for serial port to be available
   if (!rf95.init())
@@ -182,7 +184,10 @@ void split_float(float *v, uint8_t *i,uint8_t *f)
 
 float mesure_batterie()
 {
-  int sensorValue = analogRead(A0); //read the A0 pin value
+  int sensorValue1 = analogRead(A0) ; //read the A0 pin value
+  int sensorValue2 = analogRead(A0) ; //read the A0 pin value
+  int sensorValue3 = analogRead(A0) ; //read the A0 pin value
+  int sensorValue =(sensorValue1+sensorValue2+sensorValue3)/3 - ADC_CORRECTION ;
   return R_div * V_REF * sensorValue / 1023.0 ;
   //Pour arrondir a 1 décimale prêt floor(10*f+0.5)/10 
 }
