@@ -22,13 +22,3 @@ param_mysql = {
     'db'     : config.get('MYSQL','db')
 }
 temp_table = config.get('MYSQL','table')
-
-
-# Recuperation CONFIG MSSQL
-param_mssql = {
-    'host'   : config.get('MSSQL','host'),
-    'user'   : config.get('MSSQL','user'),
-    'password' : config.get('MSSQL','passwd'),
-    'database'     : config.get('MSSQL','db')
-}
-mssql_table = config.get('MSSQL','table')

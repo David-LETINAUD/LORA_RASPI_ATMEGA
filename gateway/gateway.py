@@ -30,9 +30,7 @@ def Analyse_Trames(m):
  if m[0]==str(MY_SERVER_ADDRESS):
   #Pour capteur temperature "TH"
   if capteur_type=="TH":
-   #r = Temp(m[3:])  
-   #r = Temp_map(m[3:]) 
-   r= Temp_mssql(m[3:])  
+   r = Temp_sensor_packet(m[3:]) 
   # Pour autres capteurs
   #if capteur_type=="PR":
   # ...
