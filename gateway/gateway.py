@@ -35,13 +35,17 @@ def Analyse_Trames(m):
   #if capteur_type=="PR":
   # ...
   
- if r==-1 :
-   print(m)
+ #if r==-1 :
+  # print(m)
    
- elif r == 0:
-  #Envoie d'un acquittement si recu et pas d erreurs
+ if r > 0:
+  # Envoie d'un acquittement si recu et pas d erreurs
+  
+  #Si recu et enregistrer dans la BDD alors
+  print (capteurs[r].ack )
+  
   serialPort.Send("{}{}{} A".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
- elif r!=1:
+ elif r<0:
   #Si erreur : demande de renvoie
   serialPort.Send("{}{}{} E".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
  
@@ -49,7 +53,7 @@ def Analyse_Trames(m):
 # A la réception d une trame
 def OnReceiveSerialData(message):
  str_message = message.decode("utf-8")
- #print(str_message) # Affiche la trame reçue
+ print(str_message) # Affiche la trame reçue
  Analyse_Trames(str_message)
 
 
@@ -64,8 +68,18 @@ serialPort.RegisterReceiveCallback(OnReceiveSerialData)
 print("START")
 while 1:
  #x=serialPort.readline()
- #print(x)
- time.sleep(10) 
+ #print("t")
+ 
+ for key,value in capteurs.items():
+  #print( key,value.ack, value.time_cycle )
+  
+  if (value.time_cycle==1):
+    value.time_cycle=0
+    value.ack=0
+  elif (value.ack==1):
+    value.time_cycle=1
+    
+ time.sleep(60)  # en secondes
 
 
 
