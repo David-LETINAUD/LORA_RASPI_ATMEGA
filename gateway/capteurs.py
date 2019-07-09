@@ -23,13 +23,29 @@ def insert_db(query,values):
  #print(cur.rowcount, "record inserted")
 # Gestion position des capteurs
 
-Temp_sensor_type = namedtuple("Temp_sensor_type", "name")
+class Temp_sensor_class:
+  numero = 0
+  name = ""
+  ack = 0
+  time_cycle = 0
+  
+  def __init__(self, num, nm):
+    self.numero = num
+    self.name = nm
+
+
+#Temp_sensor_type = namedtuple("Temp_sensor_type", "name ack")
 # Capt_pos = namedtuple("Capt_pos", "name latitude longitude")
 # 3:Temp_sensor_type("Reception", 45.964281,2.194614)
 # Associations numeros <-> capteurs 
-capteurs = {1:Temp_sensor_type("IT"),
-            2:Temp_sensor_type("Expedition"),
-            3:Temp_sensor_type("Reception")
+#capteurs = {1:Temp_sensor_type("IT", 0),
+            #2:Temp_sensor_type("Expedition", 0),
+            #3:Temp_sensor_type("Reception", 0)
+            #}
+            
+capteurs = {1:Temp_sensor_class(1,"IT"),
+            2:Temp_sensor_class(2,"Expedition"),
+            3:Temp_sensor_class(3,"Reception")
             }
  
  
@@ -42,14 +58,14 @@ def Temp_sensor_packet(msg):
  
  global cpt
  
- if cpt==1:
-  numero=2
-  cpt=2
- elif cpt==2:
-  numero=3
-  cpt=0
- else :
-  cpt=1
+ #if cpt==1:
+  #numero=2
+  #cpt=2
+ #elif cpt==2:
+  #numero=3
+  #cpt=0
+ #else :
+  #cpt=1
 
  ressentie = heat_index(temp, hum)
  
@@ -58,16 +74,23 @@ def Temp_sensor_packet(msg):
 
  # Si valeur improbable : trame corrompu rendre code erreur
  if numero < 0 or numero > 255:
-  return 1
+  return -1
  elif vbat < 0 or vbat > 10:
-  return 2
+  return -2
  elif hum < 0 or hum > 100:
-  return 3
+  return -3
  elif temp < -50 or vbat > 99:
-  return 4
+  return -4
 
  # Commande SQL
- insert_db(temp_map_query,values)
- # Pas d erreur
- return 0
+ print (capteurs[numero].ack )
+ 
+ if capteurs[numero].ack == 0:
+  insert_db(temp_map_query,values)
+  # Pas d erreur
+  # Si recu et enregistrer dans la BDD alors
+ capteurs[numero].ack = 1
+ 
+ print (capteurs[numero].ack )
+ return numero
  
