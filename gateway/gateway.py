@@ -10,6 +10,8 @@ import serial_rx_tx # Serial port
 from config import *
 from capteurs import *
 
+ACK_OPTION = True
+#ACK_OPTION= False
 
 # Lors de la fermeture du programme
 def fermer_prog(signal,frame):
@@ -42,12 +44,14 @@ def Analyse_Trames(m):
   # Envoie d'un acquittement si recu et pas d erreurs
   
   #Si recu et enregistrer dans la BDD alors
-  print (capteurs[r].ack )
-  
-  serialPort.Send("{}{}{} A".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
+  #print (capteurs[r].ack )
+  #print("{}{}{} A".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
+  if ACK_OPTION :
+   serialPort.Send("{}{}{} A".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
  elif r<0:
   #Si erreur : demande de renvoie
-  serialPort.Send("{}{}{} E".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
+  if ACK_OPTION :
+   serialPort.Send("{}{}{} E".format(addr_capt,capteur_type,MY_SERVER_ADDRESS))
  
 
 # A la réception d une trame

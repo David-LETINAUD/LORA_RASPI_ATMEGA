@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*
 from heat_index import *
 from config import *
-import pymssql
+#import pymssql
 import MySQLdb as mysql# Database
 from collections import namedtuple
 
@@ -15,7 +15,7 @@ temp_map_query = "INSERT INTO {} (TEMP_numero,TEMP_name, TEMP_temp, TEMP_hum, TE
 db = mysql.connect(**param_mysql)        # name of the database
 cur = db.cursor()
 
-cpt=0
+#cpt=0
 
 def insert_db(query,values):
  cur.execute(query,values)
@@ -56,7 +56,7 @@ def Temp_sensor_packet(msg):
  hum = float(tab[2])
  vbat = float(tab[3])
  
- global cpt
+ #global cpt
  
  #if cpt==1:
   #numero=2
@@ -85,12 +85,15 @@ def Temp_sensor_packet(msg):
  # Commande SQL
  print (capteurs[numero].ack )
  
+ 
+ # Pas d erreur
+ # Si recu et enregistrer dans la BDD alors
  if capteurs[numero].ack == 0:
   insert_db(temp_map_query,values)
   # Pas d erreur
   # Si recu et enregistrer dans la BDD alors
  capteurs[numero].ack = 1
  
- print (capteurs[numero].ack )
+ #print (capteurs[numero].ack )
  return numero
  
