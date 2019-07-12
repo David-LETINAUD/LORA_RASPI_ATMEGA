@@ -27,6 +27,11 @@ sudo /etc/init.d/apache2 restart
 Accès à distance à la base de donnée  
 Dans : /etc/mysql/mariadb.conf.d/50-server.cnf  
 Modifier : bind-address 127.0.0.1 en bind-address 0.0.0.0  
+
+### Lancement au démarrage
+Dans : /etc/rc.local
+Ajouter : python3 /home/pi/Desktop/gateway/gateway.py
+
 ## Arduino_LORA_low_power_trame
 ### rf95_client.ino
 Programme d'acquisition de mesures et envoie par communication Lora. A installer sur les modules capteurs.
