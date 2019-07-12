@@ -1,11 +1,11 @@
 # Lecture fichier config.cfg
-
+# -*- coding: utf-8 -*
 import configparser # Permet de parser le fichier de parametres
 
 # https://www.quennec.fr/trucs-astuces/langages/python/python-utiliser-un-fichier-de-param%C3%A8tres
 
 config = configparser.RawConfigParser() # On cree un nouvel objet "config"
-config.read('config.cfg') # On lit le fichier de parametres
+config.read('/home/pi/Desktop/gateway/config.cfg') # On lit le fichier de parametres
 
 # Recuperation CONFIG SERIAL
 port = config.get('SERIAL','port')
