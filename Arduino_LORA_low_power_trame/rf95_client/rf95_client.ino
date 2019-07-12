@@ -1,120 +1,120 @@
 // rf95_server.pde
 // -*- mode: C++ -*-
-// Example sketch showing how to create a simple messageing server
-// with the RH_RF95 class. RH_RF95 class does not provide for addressing or
-// reliability, so you should only use RH_RF95  if you do not need the higher
-// level messaging abilities.
-// It is designed to work with the other example rf95_client
-// Tested with Anarduino MiniWirelessLoRa, Rocket Scream Mini Ultra Pro with
-// the RFM95W, Adafruit Feather M0 with RFM95
 
-//#include <Adafruit_SleepyDog.h>
 #include <SPI.h>
-#include <RH_RF95.h>
-#include <string.h>
-#include <LowPower.h>
-#include <Wire.h>
-#include <Adafruit_HTU21DF.h>
+#include <RH_RF95.h>          // RF95 Lora module
+#include <Adafruit_HTU21DF.h> // HTU21D sensor for Temperature/Humidity
+//#include <string.h>
+//#include <LowPower.h>
+//#include <Wire.h>
 
-
+// TPL5110 : Very low power Timer breakout (~35nA during sleep mode)
+// Done pin used when the sending is completed
 #define TPl5110_DONE A3
-#define MY_ADDRESS 1
-#define Server_ADDRESS 0
-#define SENSOR_TYPE "TH"
-#define V_REF 1.1
-#define R_div 4 //pont diviseur de tension
-#define NB_NOT_ACK 3 // Trame peut être renvoyée 3 fois jusqu'à ce que l'ack soit recu
-#define ADC_CORRECTION 30
 
+// Sensor network management
+#define SENSOR_TYPE "TH"    // Define the type of sensor
+#define SERVER_ADDRESS 0    // The server Adress where data is send
+#define MY_ADDRESS 1        // The Adress of the sensor, should be unique for each type of sensor
+
+// ADC management for battery voltage measurement
+#define V_REF 1.1           // Internal reference voltage
+#define R_div 4             // Corresponds to the ratio of the voltage divider (1M/(1M+3M)=1/4)  => Maximum measurable voltage : V_ref*R_div = 4,4V
+#define ADC_CORRECTION 42   // Correct the little ADC offset to be more accurate
+
+#define NB_MAX_NOT_ACK 3        // The number of times the frame must be retransmitted if the acknowledgement is not received
 uint8_t cpt_not_ack = 0 ;
+
 // Singleton instance of the radio driver
 RH_RF95 rf95;
-//RH_RF95 rf95(5, 2); // Rocket Scream Mini Ultra Pro with the RFM95W
-//RH_RF95 rf95(8, 3); // Adafruit Feather M0 with RFM95 
+// Sensor instance
+Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
-// Need this on Arduino Zero with SerialUSB port (eg RocketScream Mini Ultra Pro)
-//#define Serial SerialUSB
+// Message to send
+uint8_t msg[50] = {0};
+// Data to be transmitted : i : integer part  | f : decimal part
+//                          t : temperature   | h : humidity  | v : voltage
+uint8_t it,ft, ih,fh, iv,fv ;
 
-uint8_t trame[50] = {0};
-uint8_t cpt = 0 ;
-uint8_t it,ft,ih,fh,iv,fv ;
+uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];         // Reception buffer
+//uint8_t len_buf = sizeof(buf);                // Buffer size
 
-uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
-uint8_t len = sizeof(buf);
+char ack = '0' ;
+char ack_type();
 
-char ack = 0 ;
+bool msg_err = false ;
 
-void acquisition(uint8_t *it,uint8_t *ft, uint8_t *ih,uint8_t * fh,uint8_t * iv,uint8_t * fv);
-void split_float(float *v, uint8_t *i,uint8_t *f);
 
+
+/***FUNCTIONS***/
+void  acquisition(uint8_t *it,uint8_t *ft, uint8_t *ih,uint8_t * fh,uint8_t * iv,uint8_t * fv);
 float mesure_batterie();
 float mesure_temperature();
 float mesure_humiditee();
 
-char ack_type();
-bool trame_err = false ;
+void split_float(float *v, uint8_t *i,uint8_t *f);
 
-Adafruit_HTU21DF htu = Adafruit_HTU21DF();
 
 void setup() 
 {
-  // Rocket Scream Mini Ultra Pro with the RFM95W only:
-  // Ensure serial flash is not interfering with radio communication on SPI bus
-//  pinMode(4, OUTPUT);
-//  digitalWrite(4, HIGH);
- pinMode(TPl5110_DONE, OUTPUT);
- digitalWrite(TPl5110_DONE, LOW);
+  /*Serial.begin(9600);
+  while (!Serial) ; // Wait for serial port to be available
+  Serial.println("Setup");*/
+  
+  pinMode(TPl5110_DONE, OUTPUT);
+  digitalWrite(TPl5110_DONE, LOW);
 
+  // Sensor init
   if (!htu.begin()) {
     //Serial.println("Couldn't find sensor!");
-    while (1);
   }
 
   // ADC resolution => 10bits (2^10 - 1=1023)
-  analogReference(INTERNAL); // Utiliser A_ref=1.1V pour l'ADC
-  //Serial.begin(9600);
-  //while (!Serial) ; // Wait for serial port to be available
-  if (!rf95.init())
-  ;   // Serial.println("init failed");
-    
-  rf95.setFrequency(868);
+  analogReference(INTERNAL);      // To use A_ref=1.1V for the ADC (independent of the battery voltage)
+
+  // Lora module init
+  if (!rf95.init()){
+     // Serial.println("init failed");
+  }
+  rf95.setFrequency(868);         // Set frequency to 868MHz
   // Defaults after init are 434.0MHz, 13dBm, Bw = 125 kHz, Cr = 4/5, Sf = 128chips/symbol, CRC on
 
   // The default transmitter power is 13dBm, using PA_BOOST.
   // If you are using RFM95/96/97/98 modules which uses the PA_BOOST transmitter pin, then 
   // you can set transmitter powers from 5 to 23 dBm:
-//  driver.setTxPower(23, false);
-  // If you are using Modtronix inAir4 or inAir9,or any other module which uses the
-  // transmitter RFO pins and not the PA_BOOST pins
-  // then you can configure the power transmitter power for -1 to 14 dBm and with useRFO true. 
-  // Failure to do that will result in extremely low transmit powers.
-//  driver.setTxPower(14, true);
+  rf95.setTxPower(23, false);    // false => use PA_boost
 }
 
 void loop()
 {
   ack='0';
-  if (trame_err == true or cpt_not_ack==0 )
+  // Make a data acquisition only 
+    // If the server detect a measurment error => msg_err = true
+    // If the acknoledge is already receive
+  if (msg_err == true or cpt_not_ack==0 )
   {
     acquisition(&it,&ft,&ih,&fh,&iv,&fv);
-    sprintf(trame, "%d%s%d %d.%d %d.%d %d.%d",Server_ADDRESS,SENSOR_TYPE,MY_ADDRESS,it,ft,ih,fh,iv,fv);
-    trame_err = false ;
+    sprintf(msg, "%d%s%d %d.%d %d.%d %d.%d",SERVER_ADDRESS,SENSOR_TYPE,MY_ADDRESS,it,ft,ih,fh,iv,fv);
+    msg_err = false ;
   }
-  
-  rf95.send(trame, sizeof(trame));
+
+  // Message transmission
+  rf95.send(msg, sizeof(msg));
   rf95.waitPacketSent();
 
-  if (rf95.waitAvailableTimeout(1250)) // emetteur<-->recepteur à 1 mètre timeout minimum de 550ms
-                                        // A la reception d'une trame renvoie 1 et attend x ms et renvoie 0 si rien est recu avant la fin des x ms
+  // Wait a response
+  if (rf95.waitAvailableTimeout(1000)) // transmitter <--> receiver timeout minimum of 550ms
+                                       // When receiving an msg, the server returns an acknowledgement 
+                                       // If nothing is received before the end of the timeout (1s)
   { 
     // Should be a reply message for us now   
-    if (rf95.recv(buf, &len))
+    if (rf95.recv(buf, sizeof(buf)))
    {
-     // Serial.print("got reply: ");
-     // Serial.println((char*)buf);
+      /*Serial.print("got reply: ");
+      Serial.println((char*)buf);*/
 
       //Serial.print("ack_type");
-      ack = ack_type();
+      ack = ack_type();               // Return the ack type : A=ok | E=erreur
       //Serial.println((char)ack);
 
       memset(buf, '\0', strlen(buf) - 1);       
@@ -129,37 +129,50 @@ void loop()
     //Serial.println("No reply, is rf95_server running?");
   }
 
+  // RF95 LORA module in sleep mode 
   rf95.sleep();
-  if (ack=='A' or cpt_not_ack >= NB_NOT_ACK-1)
+
+  // IF an aknloage is receive OR if it is not receive after NB_MAX_NOT_ACK of time then power off
+  if (ack=='A' or cpt_not_ack >= NB_MAX_NOT_ACK-1)
   { 
-     digitalWrite(TPl5110_DONE, HIGH);
+    cpt_not_ack = 0;
+    digitalWrite(TPl5110_DONE, HIGH);
     //delay(4000);
     //Watchdog.sleep(4000); //PAS TOP
     //LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //un peu mieux que watchdog mais plus de serial
     //LowPower.idle(SLEEP_4S, ADC_OFF, TIMER2_OFF, TIMER1_OFF, TIMER0_OFF,SPI_OFF, USART0_OFF, TWI_OFF); // moins bien que powerdown
-    cpt_not_ack = 0;
+    
   }
   else if (ack=='E')
   {
-    trame_err = true ;
-    //Serial.println("Trame err : refaire acquisition");
+    msg_err = true ;
+    //Serial.println("msg err : refaire acquisition");
   }
   else
   {
-    // renvoie de la trame
-    //Serial.print("NOT_ack : ");
-    //Serial.println(cpt_not_ack);
     ++cpt_not_ack;
   }
 }
+
+
+/***Functions***/
 char ack_type()
 {
-  if ( (atoi(&buf[0])==MY_ADDRESS) and (atoi(&buf[3])==(char)Server_ADDRESS) and (buf[1]==(char)SENSOR_TYPE[0])and (buf[2]==(char)SENSOR_TYPE[1]) )
+  if ( (atoi(&buf[0])==MY_ADDRESS) and (atoi(&buf[3])==(char)SERVER_ADDRESS) and (buf[1]==(char)SENSOR_TYPE[0])and (buf[2]==(char)SENSOR_TYPE[1]) )
   {
     return buf[5];
   }
   return -1 ;  
 }
+
+// split the float f into integer part i and decimal part f
+void split_float(float *v, uint8_t *i,uint8_t *f)
+{
+  *i = (uint8_t) *v;                    // Make integer part
+  *f = (uint8_t) ((*v - *i)*100);       // Fraction. Has same sign as integer part
+  if (*f<0) *f = -*f;                   // So if it is negative make fraction positive again.
+}
+
 
 void acquisition(uint8_t *it,uint8_t *ft, uint8_t *ih,uint8_t * fh,uint8_t * iv,uint8_t * fv)
 {
@@ -175,21 +188,16 @@ void acquisition(uint8_t *it,uint8_t *ft, uint8_t *ih,uint8_t * fh,uint8_t * iv,
   float tension=mesure_batterie();
   split_float(&tension,iv,fv);
 }
-void split_float(float *v, uint8_t *i,uint8_t *f)
-{
-  *i = (uint8_t) *v;            // Make integer part
-  *f = (uint8_t) ((*v - *i)*100);      // Fraction. Has same sign as integer part
-  if (*f<0) *f = -*f;           // So if it is negative make fraction positive again.
-}
 
 float mesure_batterie()
 {
   int sensorValue1 = analogRead(A0) ; //read the A0 pin value
   int sensorValue2 = analogRead(A0) ; //read the A0 pin value
   int sensorValue3 = analogRead(A0) ; //read the A0 pin value
+  // Make an average and apply the offset correction for a better accuracy
   int sensorValue =(sensorValue1+sensorValue2+sensorValue3)/3 - ADC_CORRECTION ;
   return R_div * V_REF * sensorValue / 1023.0 ;
-  //Pour arrondir a 1 décimale prêt floor(10*f+0.5)/10 
+  //To round to 1 decimal : floor(10*f+0.5)/10 
 }
 float mesure_temperature()
 {
