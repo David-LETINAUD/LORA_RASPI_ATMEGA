@@ -6,7 +6,10 @@
 #
 import serial
 import sys
-import thread as _thread
+try:
+ import thread as _thread
+except:
+ import _thread   
 import threading
 
 class SerialPort:
