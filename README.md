@@ -3,7 +3,7 @@
 ### Environnement python
 sudo apt-get install python  
 sudo apt-get install python-configparser  
-sudo apt-get install python-mysqldb  
+sudo apt-get install python3-mysqldb  
 sudo apt-get install python-pymssql
 
 ### Config ntp server
@@ -15,8 +15,15 @@ Dans le fichier : /etc/environment
 export http_proxy="http://username:password@proxyipaddress:proxyport"  
 export https_proxy="http://username:password@proxyipaddress:proxyport"  
 
-### Installation serveur mysql et phpmyadmin
-https://raspbian-france.fr/installer-serveur-web-raspberry-lamp/  
+### Installation serveur mysql et phpmyadmin 
+sudo apt-get install apache2  
+sudo apt-get install php    
+sudo apt-get install mysql-server php-mysql  
+sudo apt-get install phpmyadmin  
+Activer mysqli :  
+sudo phpenmod mysqli  
+sudo /etc/init.d/apache2 restart  
+
 Accès à distance à la base de donnée  
 Dans : /etc/mysql/mariadb.conf.d/50-server.cnf  
 Modifier : bind-address 127.0.0.1 en bind-address 0.0.0.0  
