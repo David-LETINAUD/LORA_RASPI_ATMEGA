@@ -11,7 +11,7 @@ Dans le fichier : /etc/systemd/timesyncd.conf
 Ajouter l'adresse des serveurs ntp, dans le champ "NTP"
 
 ### Config proxy server
-Dans le fichier : /etc/environment
+Dans le fichier : /etc/environment  
 export http_proxy="http://username:password@proxyipaddress:proxyport"  
 export https_proxy="http://username:password@proxyipaddress:proxyport"  
 
@@ -26,11 +26,10 @@ sudo /etc/init.d/apache2 restart
 
 Accès à distance à la base de donnée  
 Dans : /etc/mysql/mariadb.conf.d/50-server.cnf  
-Modifier : bind-address 127.0.0.1 en bind-address 0.0.0.0  
+Modifier : bind-address = 127.0.0.1 en bind-address = 0.0.0.0  
 
-### Lancement au démarrage
-Dans : /etc/rc.local
-Ajouter : python3 /home/pi/Desktop/gateway/gateway.py
+### Configurer gateway.py comme un service
+Voir Readme.md [gateway/service](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/gateway/service/)  
 
 ## Arduino_LORA_low_power_trame
 ### rf95_client.ino
