@@ -47,7 +47,7 @@ Fichier de config des paramètres de communication série et de la base de donn�
 ### serial_rx_tx.py
 Classe SerialPort pour la gestion de la communication série.
 ### heat_index.py
-Calcul de la témpérature ressentie.
+Calcul de la température ressentie.
 ### config.py
 Récupération des paramètres de config.cfg.
 ### capteurs.py
