@@ -1,0 +1,11 @@
+[Unit]
+Description=LORA gateway
+After=multi-user.target
+ 
+[Service]
+Type=simple
+ExecStart=/usr/bin/python3.5 home/pi/Desktop/gateway/gateway.py
+Restart=on-abort
+ 
+[Install]
+WantedBy=multi-user.target
