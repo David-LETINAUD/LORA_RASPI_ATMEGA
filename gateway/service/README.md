@@ -1,5 +1,5 @@
 # Configurer gateway comme un service
-cp gateway.service /lib/systemd/system/  
+sudo cp gateway.service /lib/systemd/system/  
 sudo chmod 644 /lib/systemd/system/gateway.service  
 chmod +x /home/pi/Desktop/gateway/gateway.py  
   
