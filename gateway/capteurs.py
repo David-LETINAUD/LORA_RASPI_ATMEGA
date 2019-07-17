@@ -44,8 +44,22 @@ class Temp_sensor_class:
             #}
             
 capteurs = {1:Temp_sensor_class(1,"IT"),
-            2:Temp_sensor_class(2,"Expedition"),
-            3:Temp_sensor_class(3,"Reception")
+            2:Temp_sensor_class(2,"quai expedition"),
+            3:Temp_sensor_class(3,"aspiration"),
+            4:Temp_sensor_class(4,"quai reception"),
+            5:Temp_sensor_class(5,"prepa expedition"),
+            6:Temp_sensor_class(6,"SAV"),
+            7:Temp_sensor_class(7,"zone magasin"),
+            8:Temp_sensor_class(8,"retour SAV"),
+            9:Temp_sensor_class(9,"Emballage"),
+            10:Temp_sensor_class(10,"Achats"),
+            11:Temp_sensor_class(11,"Acceuil"),
+            12:Temp_sensor_class(12,"RD"),
+            13:Temp_sensor_class(13,"qualite"),
+            14:Temp_sensor_class(14,"HR"),
+            15:Temp_sensor_class(15,"ADV"),
+            16:Temp_sensor_class(16,"magasin proto"),
+            17:Temp_sensor_class(17,"vestiaires")
             }
  
  
