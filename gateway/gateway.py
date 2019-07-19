@@ -11,6 +11,9 @@ from log_files import *
 from config import *
 from capteurs import *
 
+
+logger_info.info("Gateway START")
+
 ACK_OPTION = True       # RASPBERRY_1 renvoie acknoledge
 #ACK_OPTION= False      # RASPBERRY_2 pas de renvoie acknoledge
 
@@ -26,6 +29,7 @@ def fermer_prog(signal,frame):
   print("Error closing gateway.py: ",s)
   logger_warning.warning('fermer_prog : {}'.format(s))
  finally:
+  logger_info.info("Gateway STOP")
   sys.exit(0)
 
 signal.signal(signal.SIGINT, fermer_prog)
