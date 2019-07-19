@@ -4,22 +4,29 @@
 import signal
 import time
 import sys
+
 import serial_rx_tx # Serial port
 
-
+from log_files import *
 from config import *
 from capteurs import *
 
-ACK_OPTION = True
-#ACK_OPTION= False
+ACK_OPTION = True       # RASPBERRY_1 renvoie acknoledge
+#ACK_OPTION= False      # RASPBERRY_2 pas de renvoie acknoledge
 
 # Lors de la fermeture du programme
 def fermer_prog(signal,frame):
- serialPort.Close()
- db.close()
- sys.stdout.flush()
- print("Exit")
- sys.exit(0)
+ try:
+  serialPort.Close()
+  db.close()
+  sys.stdout.flush()
+  print("Exit")
+ except:
+  s=sys.exc_info()[0]
+  print("Error closing gateway.py: ",s)
+  logger_warning.warning('fermer_prog : {}'.format(s))
+ finally:
+  sys.exit(0)
 
 signal.signal(signal.SIGINT, fermer_prog)
 

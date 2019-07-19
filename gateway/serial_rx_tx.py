@@ -6,11 +6,15 @@
 #
 import serial
 import sys
+# Pour compatibilité python 2 et 3
 try:
  import thread as _thread
 except:
- import _thread   
+ import _thread 
+    
 import threading
+
+from log_files import *
 
 class SerialPort:
     def __init__(self):
@@ -27,24 +31,32 @@ class SerialPort:
             if self.serialport.is_open():
                 self.serialport.close()
         except:
-            print("Destructor error closing COM port: ", sys.exc_info()[0] )
+            s=sys.exc_info()[0] 
+            print("Destructor error closing COM port: ", s)
+            logger_warning.warning('Destructor : {}'.format(s))
 
     def RegisterReceiveCallback(self,aReceiveCallback):
         self.ReceiveCallback = aReceiveCallback
         try:
             _thread.start_new_thread(self.SerialReadlineThread, ())
         except:
+            s=sys.exc_info()[0] 
             print("Error starting Read thread: ", sys.exc_info()[0])
+            logger_warning.warning('RegisterReceiveCallback : {}'.format(s))
 
     def SerialReadlineThread(self):
-        while True:
+        while 1:
             try:
                 if self.isopen:
                     self.receivedMessage = self.serialport.readline()
                     if self.receivedMessage != "":
                         self.ReceiveCallback(self.receivedMessage)
             except:
-                print("Error reading COM port: ", sys.exc_info()[0])
+                s=sys.exc_info()[0]
+                print("Error reading COM port: ",s)
+                logger_warning.warning('SerialReadlineThread : {}'.format(s))
+                sys.exit(0) # evite une écriture infini dans le fichier log
+                
 
     def IsOpen(self):
         return self.isopen
@@ -62,7 +74,10 @@ class SerialPort:
                 self.serialport.open()
                 self.isopen = True
             except:
-                print("Error opening COM port: ", sys.exc_info()[0])
+                s=sys.exc_info()[0] 
+                print("Error opening COM port: ", s)
+                logger_warning.warning('Open : {}'.format(s))
+                
 
 
     def Close(self):
@@ -71,7 +86,9 @@ class SerialPort:
                 self.serialport.close()
                 self.isopen = False
             except:
-                print("Close error closing COM port: ", sys.exc_info()[0])
+                s=sys.exc_info()[0] 
+                print("Close error closing COM port: ", s)
+                logger_warning.warning('Close : {}'.format(s))
 
     def Send(self,message):
         if self.isopen:
@@ -81,7 +98,9 @@ class SerialPort:
                 newmessage += '\r\n'
                 self.serialport.write(newmessage.encode('utf-8'))
             except:
-                print("Error sending message: ", sys.exc_info()[0] )
+                s=sys.exc_info()[0] 
+                print("Error sending message: ", s )
+                logger_warning.warning('Send : {}'.format(s))
             else:
                 return True
         else:

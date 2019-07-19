@@ -1,10 +1,10 @@
 #
 # -*- coding: utf-8 -*
+from log_files import *
 from heat_index import *
 from config import *
-#import pymssql
-import MySQLdb as mysql# Database
-from collections import namedtuple
+
+import MySQLdb as mysql
 
 
 MY_SERVER_ADDRESS=0 # de 0 a 9
@@ -18,10 +18,16 @@ cur = db.cursor()
 #cpt=0
 
 def insert_db(query,values):
- cur.execute(query,values)
- db.commit()
- #print(cur.rowcount, "record inserted")
-# Gestion position des capteurs
+ try:
+  cur.execute(query,values)
+  db.commit()
+  #print(cur.rowcount, "record inserted")
+  # Gestion position des capteurs
+ except:
+  s=sys.exc_info()[0]
+  print("Error database insertion : ",s)
+  logger_warning.warning('insert_db : {}'.format(s))
+ 
 
 class Temp_sensor_class:
   numero = 0
@@ -33,15 +39,6 @@ class Temp_sensor_class:
     self.numero = num
     self.name = nm
 
-
-#Temp_sensor_type = namedtuple("Temp_sensor_type", "name ack")
-# Capt_pos = namedtuple("Capt_pos", "name latitude longitude")
-# 3:Temp_sensor_type("Reception", 45.964281,2.194614)
-# Associations numeros <-> capteurs 
-#capteurs = {1:Temp_sensor_type("IT", 0),
-            #2:Temp_sensor_type("Expedition", 0),
-            #3:Temp_sensor_type("Reception", 0)
-            #}
             
 capteurs = {1:Temp_sensor_class(1,"IT"),
             2:Temp_sensor_class(2,"quai expedition"),
@@ -69,17 +66,6 @@ def Temp_sensor_packet(msg):
  temp = float(tab[1])
  hum = float(tab[2])
  vbat = float(tab[3])
- 
- #global cpt
- 
- #if cpt==1:
-  #numero=2
-  #cpt=2
- #elif cpt==2:
-  #numero=3
-  #cpt=0
- #else :
-  #cpt=1
 
  ressentie = heat_index(temp, hum)
  
@@ -88,17 +74,20 @@ def Temp_sensor_packet(msg):
 
  # Si valeur improbable : trame corrompu rendre code erreur
  if numero < 0 or numero > 255:
+  logger_info.info("Erreur numero (out of range) : {}".format(numero))
   return -1
  elif vbat < 0 or vbat > 10:
+  logger_info.info("Erreur tension batterie (out of range) : {}".format(vbat))
   return -2
  elif hum < 0 or hum > 100:
+  logger_info.info("Erreur humidité (out of range) : {}".format(hum))
   return -3
  elif temp < -50 or vbat > 99:
+  logger_info.info("Erreur température (out of range) : {}".format(temp))
   return -4
 
  # Commande SQL
  print (capteurs[numero].ack )
- 
  
  # Pas d erreur
  # Si recu et enregistrer dans la BDD alors
@@ -106,8 +95,9 @@ def Temp_sensor_packet(msg):
   insert_db(temp_map_query,values)
   # Pas d erreur
   # Si recu et enregistrer dans la BDD alors
- capteurs[numero].ack = 1
- 
+  capteurs[numero].ack = 1
+ else :
+  logger_info.info("Capteur température n°{} : envois multiples dans un cycle => Vérifier période d'acquisition du capteur OU mauvaise réception de l'aquitement".format(numero))
  #print (capteurs[numero].ack )
  return numero
  
