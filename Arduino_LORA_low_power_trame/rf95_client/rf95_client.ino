@@ -4,23 +4,29 @@
 #include <SPI.h>
 #include <RH_RF95.h>          // RF95 Lora module
 #include <Adafruit_HTU21DF.h> // HTU21D sensor for Temperature/Humidity
-//#include <string.h>
-//#include <LowPower.h>
-//#include <Wire.h>
+
 
 // TPL5110 : Very low power Timer breakout (~35nA during sleep mode)
 // Done pin used when the sending is completed
-#define TPl5110_DONE A3
+#define TPl5110_DONE_PIN A3
 
 // Sensor network management
 #define SENSOR_TYPE "TH"    // Define the type of sensor
 #define SERVER_ADDRESS 0    // The server Adress where data is send
-#define MY_ADDRESS 1        // The Adress of the sensor, should be unique for each type of sensor
+#define MY_ADDRESS 5        // The Adress of the sensor, should be unique for each type of sensor
 
 // ADC management for battery voltage measurement
-#define V_REF 1.1           // Internal reference voltage
+// 1024 : Reference Voltage
+// 1023 : Maximum Measurable Voltage
+// Internal Ref => 1.1V
+// Vmax = 1,1*1023/1024 = 1.0989
+#define ADC_PIN A0
+#define V_REF 1.0989        // Internal reference voltage
 #define R_div 4             // Corresponds to the ratio of the voltage divider (1M/(1M+3M)=1/4)  => Maximum measurable voltage : V_ref*R_div = 4,4V
-#define ADC_CORRECTION 42   // Correct the little ADC offset to be more accurate
+#define CONV_FACTOR 0.0042926788
+// Voltage = R_div * V_REF * sensorValue / 1024.0;
+// conversion factor = R_div * V_REF / 1024.0 = 0.0042926788
+
 
 #define NB_MAX_NOT_ACK 3        // The number of times the frame must be retransmitted if the acknowledgement is not received
 uint8_t cpt_not_ack = 0 ;
@@ -39,11 +45,9 @@ uint8_t it,ft, ih,fh, iv,fv ;
 uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];         // Reception buffer
 //uint8_t len_buf = sizeof(buf);                // Buffer size
 
-char ack = '0' ;
 char ack_type();
 
 bool msg_err = false ;
-
 
 
 /***FUNCTIONS***/
@@ -61,8 +65,9 @@ void setup()
   while (!Serial) ; // Wait for serial port to be available
   Serial.println("Setup");*/
   
-  pinMode(TPl5110_DONE, OUTPUT);
-  digitalWrite(TPl5110_DONE, LOW);
+  pinMode(ADC_PIN, INPUT);
+  pinMode(TPl5110_DONE_PIN, OUTPUT);
+  digitalWrite(TPl5110_DONE_PIN, LOW);
 
   // Sensor init
   if (!htu.begin()) {
@@ -87,7 +92,7 @@ void setup()
 
 void loop()
 {
-  ack='0';
+  char ack='0';
   // Make a data acquisition only 
     // If the server detect a measurment error => msg_err = true
     // If the acknoledge is already receive
@@ -132,11 +137,11 @@ void loop()
   // RF95 LORA module in sleep mode 
   rf95.sleep();
 
-  // IF an aknloage is receive OR if it is not receive after NB_MAX_NOT_ACK of time then power off
+  // IF an aknolage is receive OR if it is not receive after NB_MAX_NOT_ACK of time then power off
   if (ack=='A' or cpt_not_ack >= NB_MAX_NOT_ACK-1)
   { 
     cpt_not_ack = 0;
-    digitalWrite(TPl5110_DONE, HIGH);
+    digitalWrite(TPl5110_DONE_PIN, HIGH); // SLEEP MODE
     //delay(4000);
     //Watchdog.sleep(4000); //PAS TOP
     //LowPower.powerDown(SLEEP_4S, ADC_OFF, BOD_OFF); //un peu mieux que watchdog mais plus de serial
@@ -191,12 +196,10 @@ void acquisition(uint8_t *it,uint8_t *ft, uint8_t *ih,uint8_t * fh,uint8_t * iv,
 
 float mesure_batterie()
 {
-  int sensorValue1 = analogRead(A0) ; //read the A0 pin value
-  int sensorValue2 = analogRead(A0) ; //read the A0 pin value
-  int sensorValue3 = analogRead(A0) ; //read the A0 pin value
-  // Make an average and apply the offset correction for a better accuracy
-  int sensorValue =(sensorValue1+sensorValue2+sensorValue3)/3 - ADC_CORRECTION ;
-  return R_div * V_REF * sensorValue / 1023.0 ;
+  uint16_t sensorValue = analogRead(A0) ; //read the A0 pin value
+
+  return CONV_FACTOR * sensorValue ;
+  //return R_div * V_REF * sensorValue1 / 1023.0 ;
   //To round to 1 decimal : floor(10*f+0.5)/10 
 }
 float mesure_temperature()
