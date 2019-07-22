@@ -13,7 +13,7 @@
 // Sensor network management
 #define SENSOR_TYPE "TH"    // Define the type of sensor
 #define SERVER_ADDRESS 0    // The server Adress where data is send
-#define MY_ADDRESS 5        // The Adress of the sensor, should be unique for each type of sensor
+#define MY_ADDRESS 6        // The Adress of the sensor, should be unique for each type of sensor
 
 // ADC management for battery voltage measurement
 // 1024 : Reference Voltage
@@ -65,7 +65,7 @@ void setup()
   while (!Serial) ; // Wait for serial port to be available
   Serial.println("Setup");*/
   
-  pinMode(ADC_PIN, INPUT);
+  //pinMode(ADC_PIN, INPUT);
   pinMode(TPl5110_DONE_PIN, OUTPUT);
   digitalWrite(TPl5110_DONE_PIN, LOW);
 
@@ -196,6 +196,7 @@ void acquisition(uint8_t *it,uint8_t *ft, uint8_t *ih,uint8_t * fh,uint8_t * iv,
 
 float mesure_batterie()
 {
+  analogRead(A0) ; // When using the TPl5110 timer, the first measurement is not accurate.
   uint16_t sensorValue = analogRead(A0) ; //read the A0 pin value
 
   return CONV_FACTOR * sensorValue ;
