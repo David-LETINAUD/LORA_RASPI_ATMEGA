@@ -58,13 +58,17 @@ Gestion des capteurs et extractions des infos et enregitrement dans base de donn
 
 ## Connexions et PCB
 ### Connexion arduino <-> Lora
-PCB utilisé : https://github.com/CongducPham/LowCostLoRaGw
-![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/arduino_lora_pcb%20schematic.PNG)
+PCB utilisé : https://github.com/CongducPham/LowCostLoRaGw  
+![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/Arduino_lora_pcb_connexions.PNG)  
 
 ### Capteur température PCB
 PCB développé spécialement pour les capteurs température/humidité : https://easyeda.com/davidletinaud/pcb_temp_hum  
 TPL5110 : Power timer très basse consommation (Période réglable par résistance variable)  
-Pont diviseur de tension : Mesure la tension de la batterie
-HTU21D : Capteur température/humidité par I²C
-![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/temp_hum_capteur_PCB.PNG)
+Pont diviseur de tension : Mesure la tension de la batterie  
+HTU21D : Capteur température/humidité par I²C  
+![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/Temp_hum_capteur_PCB_schema.PNG)  
 
+### Connexions des PCB
+![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/CAPTEUR_connexions.PNG)  
+![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/lora_arduino_tableau_connexions.PNG)  
+![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/Temp_hum_PCB_arduino_tableau_connexions.PNG)  
