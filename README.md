@@ -53,10 +53,18 @@ Récupération des paramètres de config.cfg.
 ### capteurs.py
 Gestion des capteurs et extractions des infos et enregitrement dans base de données. 
 
-## Schémas
-### Schéma de principe
+## Schéma de principe
 ![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/Schema_materiel.PNG)
 
+## Connexions et PCB
 ### Connexion arduino <-> Lora
 PCB utilisé : https://github.com/CongducPham/LowCostLoRaGw
 ![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/arduino_lora_pcb%20schematic.PNG)
+
+### Capteur température PCB
+PCB développé spécialement pour les capteurs température/humidité : https://easyeda.com/davidletinaud/pcb_temp_hum  
+TPL5110 : Power timer très basse consommation (Période réglable par résistance variable)  
+Pont diviseur de tension : Mesure la tension de la batterie
+HTU21D : Capteur température/humidité par I²C
+![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/temp_hum_capteur_PCB.PNG)
+
