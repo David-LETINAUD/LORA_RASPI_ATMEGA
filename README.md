@@ -58,4 +58,5 @@ Gestion des capteurs et extractions des infos et enregitrement dans base de donn
 ![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/Schema_materiel.PNG)
 
 ### Connexion arduino <-> Lora
-![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/Arduino_LORA_connection.PNG)
+PCB utilisé : https://github.com/CongducPham/LowCostLoRaGw
+![alt text](https://github.com/David-LETINAUD/LORA_RASPI_ATMEGA/blob/master/Images/arduino_lora_pcb%20schematic.PNG)
