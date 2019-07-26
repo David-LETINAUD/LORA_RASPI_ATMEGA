@@ -4,6 +4,7 @@
 #include <SPI.h>
 #include <RH_RF95.h>          // RF95 Lora module
 #include <Adafruit_HTU21DF.h> // HTU21D sensor for Temperature/Humidity
+#include <string.h>
 
 
 // TPL5110 : Very low power Timer breakout (~35nA during sleep mode)
@@ -13,7 +14,7 @@
 // Sensor network management
 #define SENSOR_TYPE "TH"    // Define the type of sensor
 #define SERVER_ADDRESS 0    // The server Adress where data is send
-#define MY_ADDRESS 6        // The Adress of the sensor, should be unique for each type of sensor
+#define MY_ADDRESS 11        // The Adress of the sensor, should be unique for each type of sensor
 
 // ADC management for battery voltage measurement
 // 1024 : Reference Voltage
@@ -163,11 +164,17 @@ void loop()
 /***Functions***/
 char ack_type()
 {
-  if ( (atoi(&buf[0])==MY_ADDRESS) and (atoi(&buf[3])==(char)SERVER_ADDRESS) and (buf[1]==(char)SENSOR_TYPE[0])and (buf[2]==(char)SENSOR_TYPE[1]) )
+  int capt_adr;
+  char capt_type[3];
+  int serv_adr;
+  char ack ;
+  sscanf((char *)buf,"%d %s %d %c",&capt_adr,capt_type,&serv_adr,&ack);
+  if ( (capt_adr==MY_ADDRESS) && (!strcmp(capt_type, SENSOR_TYPE)) && (serv_adr==SERVER_ADDRESS) )
   {
-    return buf[5];
+    return ack;
   }
-  return -1 ;  
+  
+  return -1 ; 
 }
 
 // split the float f into integer part i and decimal part f
