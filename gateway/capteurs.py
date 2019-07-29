@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*
+import sys
 from log_files import logger_info, logger_warning
 from heat_index import heat_index
 from config import param_mysql,temp_table

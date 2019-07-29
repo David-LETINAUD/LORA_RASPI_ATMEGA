@@ -1,11 +1,15 @@
 # -*- coding: utf-8 -*
 # Lecture fichier config.cfg
-
+import sys
+import log_files
 import configparser # Permet de parser le fichier de parametres
-import os #Pour getcwd
+#import os #Pour getcwd
 # https://www.quennec.fr/trucs-astuces/langages/python/python-utiliser-un-fichier-de-param%C3%A8tres
 
-pwd = os.getcwd()
+# Fonctionne pas en executant en tant que service
+#pwd = os.getcwd()
+
+pwd="/home/pi/Desktop/gateway"
 
 config = configparser.RawConfigParser() # On cree un nouvel objet "config"
 

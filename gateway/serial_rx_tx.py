@@ -14,7 +14,7 @@ except:
     
 import threading
 
-from log_files import *
+from log_files import logger_info, logger_warning
 
 class SerialPort:
     def __init__(self):

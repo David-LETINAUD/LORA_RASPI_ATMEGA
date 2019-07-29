@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*
 # https://www.wpc.ncep.noaa.gov/html/heatindex_equation.shtml
 from math import *
-from log_files import *
+import sys
+from log_files import logger_info, logger_warning
 
 # Convertion de Celsius en Fahrenheit
 def cCelToFah(celsius) :

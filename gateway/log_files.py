@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*
 import logging
+import sys
 from logging.handlers import RotatingFileHandler
 from config import pwd
 
