@@ -7,8 +7,6 @@
 
 // Singleton instance of the radio driver
 RH_RF95 rf95;
-uint8_t cpt = 0;
-bool sendComplete = true;  // whether the string is complete
 uint8_t inputString[RH_RF95_MAX_MESSAGE_LEN]={0};
 
 void setup() 
@@ -37,23 +35,8 @@ void loop()
     uint8_t buf[RH_RF95_MAX_MESSAGE_LEN];
     uint8_t len = sizeof(buf);
     if (rf95.recv(buf, &len))
-    {
-      //Serial.print("recu: ");
-      //Serial.println(buf[0]);
-      
-      // Protection de l'envoie
-      sendComplete = false ;
-      
+    {      
       Serial.println((char*)buf);
-      // clear the string:
-      sendComplete = true ;
-      
-      // Send a reply
-      /*rf95.send(outputString, sizeof(outputString));
-      rf95.waitPacketSent();*/
-     /* Serial.print("Mesure : ");
-      Serial.println(cpt);
-      ++cpt;*/
     }
     else
     {
@@ -70,28 +53,23 @@ void loop()
 void serialEvent() 
 {
   static int i= 0 ;
-  if (sendComplete)
-  {
-    while (Serial.available()) {
-      // get the new byte:
-      char inChar = (char)Serial.read();
-      // add it to the inputString:
-      inputString[i] = inChar;
-      //Serial.print((char)inputString[i]);
-      // if the incoming character is a newline, set a flag so the main loop can
-      // do something about it:
-      ++i;
-      if (inChar == '\n') {
-        
-        rf95.send(inputString, sizeof(inputString));
-        rf95.waitPacketSent();
+  while (Serial.available()) {
+    // get the new byte:
+    char inChar = (char)Serial.read();
+    // add it to the inputString:
+    inputString[i++] = inChar;
+
+    // if the incoming character is a newline ('\n') => send inputString by RF95    
+    if (inChar == '\n') {
       
-        /*Serial.print("envoie : " );
-        Serial.println((char *)inputString);*/
-        // RAZ du tableau
-        memset(inputString, '\0', strlen(inputString) - 1); 
-        i=0;
-      }      
-    }
+      rf95.send(inputString, sizeof(inputString));
+      rf95.waitPacketSent();
+    
+      /*Serial.print("envoie : " );
+      Serial.println((char *)inputString);*/
+      // RAZ du tableau
+      memset(inputString, '\0', strlen(inputString) - 1); 
+      i=0;
+    }      
   }
 }
